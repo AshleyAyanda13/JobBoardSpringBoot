@@ -21,9 +21,9 @@ public class SeederConfig {
         return new CommandLineRunner() {
             @Override
             public void run(String... args) {
-                if (!userRepository.findByUsername("wow").isPresent()) {
+                if (!userRepository.findByUsername("adminstrator12").isPresent()) {
                     User newUser = new User();
-                    newUser.setUsername("wow");
+                    newUser.setUsername("administrator12");
                     newUser.setPassword(passwordEncoder.encode("secure@123"));
                     newUser.setRole(Role.ADMIN);
 
