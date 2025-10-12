@@ -11,6 +11,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EducationDto {
+    @NotBlank(message = "Id Required")
+    private Long id;
     @NotBlank(message = "Institution is required")
     private String institution;
     @NotBlank(message = "Qualification is required")

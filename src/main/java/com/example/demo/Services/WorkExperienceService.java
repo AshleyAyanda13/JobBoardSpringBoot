@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +28,7 @@ public class WorkExperienceService {
 
     public WorkExperienceDto mapToDTO(WorkExperience experience) {
        WorkExperienceDto dto =new WorkExperienceDto();
+       dto.setId(experience.getId());
         dto.setCompany(experience.getCompany());
         dto.setPosition(experience.getPosition());
         dto.setStartDate(experience.getStartDate());
@@ -51,16 +53,22 @@ public class WorkExperienceService {
 
 
 
+    public WorkExperienceDto getWorkExperience(Long Id) {
 
-    public WorkExperienceDto getWorkExperienceByUserId(Long userId) {
-        WorkExperience workExperience = workExperienceRepository
-                .findByUser_Id(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Work experience not found for user ID: " + userId));
+        return workExperienceRepository.findById(Id)
+                .map(this::mapToDTO)
+                .orElseThrow(() -> new EntityNotFoundException("WorkExperience not found with id: " + Id));
 
-        return mapToDTO(workExperience);
+    }
+    public List<WorkExperienceDto> getWorkExperienceByUserId(Long userId) {
+        List<WorkExperience> workExperienceList = workExperienceRepository.findByUser_Id(userId);
+        return workExperienceList.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
-@Transactional
+
+    @Transactional
     public WorkExperience addWorkExperience(Long userId, WorkExperienceDto wexperienceDto) {
         if (wexperienceDto == null) {
             throw new IllegalArgumentException("WorkExperienceDto cannot be null");
@@ -69,9 +77,7 @@ public class WorkExperienceService {
         com.example.demo.Models.User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
 
-    if (workExperienceRepository.existsByUser_Id(userId)) {
-        throw new IllegalStateException("User already has a work experience entry.");
-    }
+
 
     WorkExperience workExperience = mapToEntity(wexperienceDto);
         workExperience.setUser(user);
@@ -79,10 +85,9 @@ public class WorkExperienceService {
         return workExperienceRepository.save(workExperience);
     }
 @Transactional
-    public WorkExperienceDto updateWorkExperience(Long userId, WorkExperienceDto updatedWorkExpDto) {
+    public WorkExperienceDto updateWorkExperience(Long userId,Long Id, WorkExperienceDto updatedWorkExpDto) {
         WorkExperience existingWorkExperience = workExperienceRepository
-                .findByUser_Id(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Work experience not found for user ID: " + userId));
+                .findByUser_IdAndId(userId,Id);
 
         existingWorkExperience.setCompany(updatedWorkExpDto.getCompany());
         existingWorkExperience.setPosition(updatedWorkExpDto.getPosition());

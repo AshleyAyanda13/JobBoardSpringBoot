@@ -12,12 +12,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EducationService {
     public EducationDto mapToDTO(Education education) {
         EducationDto dto = new EducationDto();
-
+        dto.setId(education.getId());
         dto.setInstitution(education.getInstitution());
         dto.setDegree(education.getDegree());
         dto.setStartDate(education.getStartDate());
@@ -25,6 +27,7 @@ public class EducationService {
         dto.setFieldOfStudy(education.getFieldOfStudy());
         return dto;
     }
+
     public Education mapToEntity(EducationDto educationDto) {
         Education education = new Education();
 
@@ -35,25 +38,25 @@ public class EducationService {
         education.setFieldOfStudy(educationDto.getFieldOfStudy());
         return education;
     }
+
     private final EducationRepository educationRepository;
 
-private  final UserRepository userRepository;
-    EducationService (EducationRepository educationRepository,UserRepository userRepository)
-    {
-        this.educationRepository=educationRepository;
-        this.userRepository=userRepository;
+    private final UserRepository userRepository;
+
+    EducationService(EducationRepository educationRepository, UserRepository userRepository) {
+        this.educationRepository = educationRepository;
+        this.userRepository = userRepository;
     }
-@Transactional
+
+    @Transactional
     public Education addEducation(Long userId, EducationDto educationDto) {
         if (educationDto == null) {
             throw new IllegalArgumentException("Education DTO cannot be null");
         }
 
-         User user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
-    if (educationRepository.existsByUser_Id(userId)) {
-        throw new IllegalStateException("User already has a Education.");
-    }
+
 
         Education education = mapToEntity(educationDto);
 
@@ -62,24 +65,30 @@ private  final UserRepository userRepository;
         return educationRepository.save(education);
     }
 
-    public EducationDto GetUsersEducation(Long UserId)
-    {
+    public EducationDto GetSingleEducation(Long Id) {
 
-        Education education = educationRepository
-                .findByUser_Id(UserId)
-                .orElseThrow(() -> new EntityNotFoundException("Education not found for user ID: " + UserId));
+        return educationRepository.findById(Id)
+                .map(this::mapToDTO)
+                .orElseThrow(() -> new EntityNotFoundException("WorkExperience not found with id: " + Id));
 
-        return mapToDTO(education);
 
     }
+    public List<EducationDto> GetUsersEducation(Long UserId) {
+
+        List<Education> education = educationRepository
+                .findByUser_Id(UserId);
+
+        return education.stream().map(this::mapToDTO).collect(Collectors.toList());
+
+
+    }
+
+
     @Transactional
-    public EducationDto UpdateUsersEducation(Long UserId,  EducationDto updatedEducationDto)
-    {
+    public EducationDto UpdateUsersEducation(Long UserId, Long EducationId, EducationDto updatedEducationDto) {
 
         Education existingEducation = educationRepository
-                .findByUser_Id(UserId)
-                .orElseThrow(() -> new EntityNotFoundException("Education not found for user ID: " + UserId));
-
+                .findByUser_IdAndId(UserId,EducationId);
         existingEducation.setInstitution(updatedEducationDto.getInstitution());
         existingEducation.setDegree(updatedEducationDto.getDegree());
         existingEducation.setStartDate(updatedEducationDto.getStartDate());
@@ -91,14 +100,13 @@ private  final UserRepository userRepository;
 
 
     }
+
     @Transactional
-    public void DeleteUsersEducation(Long UserId)
-    {
+    public void DeleteUsersEducation(Long UserId) {
 
 
         educationRepository.deleteByUser_Id(UserId);
     }
-
 
 
 
