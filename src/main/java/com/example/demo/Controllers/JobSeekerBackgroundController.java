@@ -2,6 +2,8 @@ package com.example.demo.Controllers;
 import com.example.demo.DTO.EducationDto;
 import com.example.demo.DTO.ResponseMessage;
 import com.example.demo.DTO.WorkExperienceDto;
+import com.example.demo.Models.Education;
+import com.example.demo.Models.WorkExperience;
 import com.example.demo.Services.EducationService;
 import com.example.demo.Services.WorkExperienceService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/profile")
@@ -34,7 +38,7 @@ private final EducationService educationService;
 
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
     @GetMapping("/myworkExperience")
-    public ResponseEntity<WorkExperienceDto> GetMyWorkExperience(HttpServletRequest request) {
+    public ResponseEntity<List<WorkExperienceDto>> GetMyWorkExperience(HttpServletRequest request) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
         com.example.demo.Models.User user = userRepository.findByUsername(username)
@@ -42,6 +46,20 @@ private final EducationService educationService;
 
 
         return ResponseEntity.ok(workExperienceService.getWorkExperienceByUserId(user.getId()));
+
+
+    }
+
+    @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
+    @GetMapping("/myworkExperience/{Id}")
+    public ResponseEntity<WorkExperienceDto> GetSingleWorkExperience(HttpServletRequest request,@PathVariable Long Id) {
+        String token = request.getHeader("Authorization").substring(7);
+        String username = jwtUtil.extractUsername(token);
+        com.example.demo.Models.User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+
+        return ResponseEntity.ok(workExperienceService.getWorkExperience(Id));
 
 
     }
@@ -62,13 +80,13 @@ private final EducationService educationService;
     }
 
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
-    @PutMapping("/updateUserWorkExperience")
-    public ResponseEntity<String> UpdateUsersExperience(HttpServletRequest request,@RequestBody WorkExperienceDto workExperienceDto) {
+    @PutMapping("/updateUserWorkExperience/{Id}")
+    public ResponseEntity<String> UpdateUsersExperience(HttpServletRequest request,@RequestBody WorkExperienceDto workExperienceDto,@PathVariable Long Id ) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
         com.example.demo.Models.User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-workExperienceService.updateWorkExperience(user.getId(),workExperienceDto);
+workExperienceService.updateWorkExperience(user.getId(),Id,workExperienceDto);
         ResponseMessage responseMessage =new ResponseMessage();
         return ResponseEntity.ok(responseMessage.Message="WorkExperience Updated Successfully");
 
@@ -95,7 +113,7 @@ workExperienceService.updateWorkExperience(user.getId(),workExperienceDto);
 
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
     @GetMapping("/myEducation")
-    public ResponseEntity<EducationDto> GetMyEducaton(HttpServletRequest request) {
+    public ResponseEntity<List<EducationDto>> GetMyEducation(HttpServletRequest request) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
         com.example.demo.Models.User user = userRepository.findByUsername(username)
@@ -105,7 +123,20 @@ workExperienceService.updateWorkExperience(user.getId(),workExperienceDto);
         return ResponseEntity.ok(educationService.GetUsersEducation(user.getId()));
 
 
+    } @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
+    @GetMapping("/myEducation/{Id}")
+    public ResponseEntity<EducationDto> GetSingleEducation(HttpServletRequest request,@PathVariable Long Id) {
+        String token = request.getHeader("Authorization").substring(7);
+        String username = jwtUtil.extractUsername(token);
+        com.example.demo.Models.User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+
+        return ResponseEntity.ok(educationService.GetSingleEducation(Id));
+
+
     }
+
 
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
     @PostMapping("/AddMyEducation")
@@ -124,12 +155,12 @@ workExperienceService.updateWorkExperience(user.getId(),workExperienceDto);
 
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
     @PutMapping("/updateUserEducation")
-    public ResponseEntity<String> UpdateUsersEducation(HttpServletRequest request,@RequestBody EducationDto educationDto) {
+    public ResponseEntity<String> UpdateUsersEducation(HttpServletRequest request,@PathVariable Long Id ,@RequestBody EducationDto educationDto) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
         com.example.demo.Models.User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        educationService.UpdateUsersEducation(user.getId(),educationDto);
+        educationService.UpdateUsersEducation(user.getId(),Id ,educationDto);
         ResponseMessage responseMessage =new ResponseMessage();
         return ResponseEntity.ok(responseMessage.Message="Education Updated Successfully");
 

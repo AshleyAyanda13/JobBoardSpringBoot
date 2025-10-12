@@ -11,6 +11,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WorkExperienceDto {
+    @NotBlank(message = "Id is Required")
+    private Long id;
     @NotBlank(message = "Company is Required")
     private String company;
     @NotBlank(message = "Position is required")

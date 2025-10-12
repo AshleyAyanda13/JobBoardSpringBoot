@@ -58,6 +58,8 @@ public class ResumeService {
     public String deleteResume(Long userId) {
         resumeRepository.findByOwnerId(userId)
                 .ifPresent(resumeRepository::delete);
+        resumeRepository.deleteAll();
+
         return "Success";
     }
 
