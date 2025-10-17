@@ -100,7 +100,13 @@ public class WorkExperienceService {
     }
 
 @Transactional
-    public void deleteWorkExperinceByUserID(Long UserId) {
-        workExperienceRepository.deleteByUser_Id(UserId);
+    public void deleteWorkExperinceByUserID(Long UserId, Long CurrentWorkExpId) {
+
+
+
+      WorkExperience workExperience=  workExperienceRepository.findByUser_IdAndId(UserId,CurrentWorkExpId);
+
+workExperienceRepository.delete(workExperience);
+
     }
 }

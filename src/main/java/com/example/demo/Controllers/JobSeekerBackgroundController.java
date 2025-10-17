@@ -1,9 +1,11 @@
 package com.example.demo.Controllers;
 import com.example.demo.DTO.EducationDto;
 import com.example.demo.DTO.ResponseMessage;
+import com.example.demo.DTO.UserInfoDto;
 import com.example.demo.DTO.WorkExperienceDto;
 import com.example.demo.Models.Education;
 import com.example.demo.Models.WorkExperience;
+import com.example.demo.Services.CustomUserDetailsService;
 import com.example.demo.Services.EducationService;
 import com.example.demo.Services.WorkExperienceService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,15 +27,18 @@ public class JobSeekerBackgroundController {
 
 private final EducationService educationService;
     private final com.example.demo.Config.JwtUtil jwtUtil;
-
+private  final CustomUserDetailsService customUserDetailsService;
     private final com.example.demo.Repository.UserRepository userRepository;
+
+
 @Autowired
-    JobSeekerBackgroundController(EducationService educationService,WorkExperienceService workExperienceService, com.example.demo.Config.JwtUtil jwtUtil, com.example.demo.Repository.UserRepository userRepository)
+    JobSeekerBackgroundController(EducationService educationService,WorkExperienceService workExperienceService, com.example.demo.Config.JwtUtil jwtUtil, com.example.demo.Repository.UserRepository userRepository,CustomUserDetailsService customUserDetailsService)
     {
        this.workExperienceService=workExperienceService;
         this.jwtUtil=jwtUtil;
         this.userRepository=userRepository;
         this.educationService=educationService;
+        this.customUserDetailsService=customUserDetailsService;
     }
 
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
@@ -94,14 +99,14 @@ workExperienceService.updateWorkExperience(user.getId(),Id,workExperienceDto);
 
     }
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
-    @DeleteMapping("/DeleteUsersWorkExperience")
-    public ResponseEntity<String> DeleteMyExperience(HttpServletRequest request) {
+    @DeleteMapping("/DeleteUsersWorkExperience/{Id}")
+    public ResponseEntity<String> DeleteMyExperience(HttpServletRequest request,@PathVariable Long Id) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
         com.example.demo.Models.User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        workExperienceService.deleteWorkExperinceByUserID(user.getId());
+        workExperienceService.deleteWorkExperinceByUserID(user.getId(),Id);
         ResponseMessage responseMessage =new ResponseMessage();
         return ResponseEntity.ok(responseMessage.Message="WorkExperience Deleted Successfully"
 
@@ -154,7 +159,7 @@ workExperienceService.updateWorkExperience(user.getId(),Id,workExperienceDto);
     }
 
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
-    @PutMapping("/updateUserEducation")
+    @PutMapping("/updateUserEducation/{Id}")
     public ResponseEntity<String> UpdateUsersEducation(HttpServletRequest request,@PathVariable Long Id ,@RequestBody EducationDto educationDto) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
@@ -168,18 +173,34 @@ workExperienceService.updateWorkExperience(user.getId(),Id,workExperienceDto);
 
     }
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
-    @DeleteMapping("/DeleteUsersEducation")
-    public ResponseEntity<String> DeleteUsersEducation(HttpServletRequest request) {
+    @DeleteMapping("/DeleteUsersEducation/{Id}")
+    public ResponseEntity<String> DeleteUsersEducation(HttpServletRequest request, @PathVariable Long Id) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
         com.example.demo.Models.User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        educationService.DeleteUsersEducation(user.getId());
+        educationService.DeleteUsersEducation(user.getId(),Id);
         ResponseMessage responseMessage =new ResponseMessage();
         return ResponseEntity.ok(responseMessage.Message="Education Details Deleted Successfully"
 
         );
+
+
+    }
+    @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
+    @GetMapping("/LoggedInUser")
+    public ResponseEntity<UserInfoDto> GetLoggedInUserDetails(HttpServletRequest request) {
+        String token = request.getHeader("Authorization").substring(7);
+        String username = jwtUtil.extractUsername(token);
+        com.example.demo.Models.User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+
+
+        return ResponseEntity.ok(customUserDetailsService.showUserInformation(user.getUsername()));
+
+
 
 
     }
