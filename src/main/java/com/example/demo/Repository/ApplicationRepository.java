@@ -11,14 +11,14 @@ import java.util.List;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
-    // Find all applications by a specific job
+
     List<Application> findByJob(Vacancy job);
 
-    // Find all applications submitted by a specific user
+
     List<Application> findByApplicant(User applicant);
     List<Application> findByApplicantId(Long userId);
 
-    // Optional: Find application by job and applicant (to prevent duplicate applications)
+
     Application findByJobAndApplicant(Vacancy job, User applicant);
 
     List<Application> findByJob_Id(Long vacancyId);

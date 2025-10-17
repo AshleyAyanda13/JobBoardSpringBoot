@@ -21,7 +21,7 @@ public class SeederConfig {
         return new CommandLineRunner() {
             @Override
             public void run(String... args) {
-                if (!userRepository.findByUsername("adminstrator12").isPresent()) {
+                if (!userRepository.findByUsername("administrator12").isPresent()) {
                     User newUser = new User();
                     newUser.setUsername("administrator12");
                     newUser.setPassword(passwordEncoder.encode("secure@123"));

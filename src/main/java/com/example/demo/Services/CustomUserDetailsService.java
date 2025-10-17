@@ -1,6 +1,7 @@
 package com.example.demo.Services;
 
 
+import com.example.demo.DTO.UserInfoDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
@@ -27,5 +28,22 @@ public class CustomUserDetailsService implements UserDetailsService {
                 List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
         );
     }
+
+    public UserInfoDto showUserInformation(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        return new UserInfoDto(
+                user.getUsername(),
+                user.getName(),
+                user.getSurname(),
+                user.getJobtitle()
+        );
+    }
+
+
+
+
+
 }
 

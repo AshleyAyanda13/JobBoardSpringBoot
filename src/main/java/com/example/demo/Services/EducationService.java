@@ -102,10 +102,12 @@ public class EducationService {
     }
 
     @Transactional
-    public void DeleteUsersEducation(Long UserId) {
+    public void DeleteUsersEducation(Long UserId,Long EducationId) {
 
 
-        educationRepository.deleteByUser_Id(UserId);
+     Education education=  educationRepository.findByUser_IdAndId(UserId,EducationId);
+
+       educationRepository.delete(education);
     }
 
 
