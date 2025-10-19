@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class VacancyDto {
 
-
+    private Long id;
 
     @NotBlank(message = "Job Title is required")
     private String jobTitle;

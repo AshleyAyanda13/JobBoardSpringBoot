@@ -20,6 +20,9 @@ public class Vacancy {
     private Long id;
 
     private String jobTitle;
+
+    @Column(columnDefinition = "TEXT")
+
     private  String jobDescription;
     private LocalDate datePosted;
     private LocalDate endDate;

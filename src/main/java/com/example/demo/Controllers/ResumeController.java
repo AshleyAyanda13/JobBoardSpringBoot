@@ -1,6 +1,7 @@
 package com.example.demo.Controllers;
 
 import com.example.demo.DTO.ResumeDto;
+import com.example.demo.Models.Resume;
 import com.example.demo.Services.ResumeService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,30 @@ private final com.example.demo.Repository.UserRepository userRepository;
     public ResumeDto getResumesByUser(@PathVariable Long userId) {
         return resumeService.getResumeByUser(userId);
     }
+
+    @PreAuthorize("hasAnyRole('RECRUITER', 'ADMIN')")
+    @GetMapping("/resume/{Id}")
+    public ResponseEntity<byte[]>  getResumesById(@PathVariable Long Id) {
+        Resume resume = resumeService.getResumeById(Id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resume.getFileName() + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resume.getData());
+
+
+    }
+
+    @PreAuthorize("hasAnyRole('RECRUITER', 'ADMIN')")
+    @GetMapping("/resumedata/{Id}")
+    public ResponseEntity<ResumeDto>  getResumeDataById(@PathVariable Long Id) {
+
+
+         return ResponseEntity.ok( resumeService.getResumeDataById(Id));
+
+
+    }
+
+
     @GetMapping("/download")
     public ResponseEntity<byte[]> downloadOwnResume(HttpServletRequest request) {
         String token = request.getHeader("Authorization").substring(7);

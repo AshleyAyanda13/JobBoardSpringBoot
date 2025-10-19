@@ -36,8 +36,8 @@ private JwtUtil jwtUtil;
 
     }
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
-    @GetMapping("/VacancyDetails")
-    public ResponseEntity<VacancyDto> GetVacancyById(HttpServletRequest request,@RequestParam Long Id) {
+    @GetMapping("/VacancyDetails/{Id}")
+    public ResponseEntity<VacancyDto> GetVacancyById(HttpServletRequest request,@PathVariable Long Id) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
         com.example.demo.Models.User user = userRepository.findByUsername(username)
@@ -53,7 +53,7 @@ private JwtUtil jwtUtil;
 
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
 
-    @GetMapping("/myVacancies")
+        @GetMapping("/myVacancies")
     public ResponseEntity<List<VacancyDto>> GetMyPostedVacancies(HttpServletRequest request) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
@@ -61,7 +61,7 @@ private JwtUtil jwtUtil;
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
 
-        return ResponseEntity.ok(vacancyService.getVacanciesByUser( user.getId()));
+        return ResponseEntity.ok(vacancyService.getVacanciesByUser(user.getId()));
 
 
     }
@@ -81,13 +81,18 @@ private JwtUtil jwtUtil;
 
     }
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
-    @GetMapping("/SearchForVacancy")
+    @PostMapping("/SearchForVacancy")
 
-    public ResponseEntity<List<Vacancy>> Search(HttpServletRequest request, @RequestBody VacancySearchCriteriaDto vacancySearchCriteriaDto) {
+    public ResponseEntity<List<VacancyDto>> Search(HttpServletRequest request, @RequestBody VacancySearchCriteriaDto vacancySearchCriteriaDto) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
         com.example.demo.Models.User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        // 🔍 Log incoming search criteria
+        System.out.println("Search request by: " + username);
+        System.out.println("Keyword: " + vacancySearchCriteriaDto.getKeyword());
+        System.out.println("Location: " + vacancySearchCriteriaDto.getLocation());
+
 
 
 
@@ -109,8 +114,8 @@ private JwtUtil jwtUtil;
 
     }
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
-    @PutMapping("/UpdateVacancy")
-    public ResponseEntity<VacancyDto> GetMyPostedVacancies(HttpServletRequest request, @PathVariable Long Id ,@RequestBody VacancyDto vacancyDto) {
+    @PutMapping("/UpdateVacancy/{Id}")
+    public ResponseEntity<VacancyDto> UpdateMyPostedVacancy(HttpServletRequest request, @PathVariable Long Id ,@RequestBody VacancyDto vacancyDto) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
         com.example.demo.Models.User user = userRepository.findByUsername(username)
@@ -122,8 +127,8 @@ private JwtUtil jwtUtil;
 
     }
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
-    @DeleteMapping("/DeleteAVacancy")
-    public ResponseEntity<String> DeleteMyPostedVacancy(HttpServletRequest request, @PathVariable Long Id ,@RequestBody VacancyDto vacancyDto) {
+    @DeleteMapping("/DeleteAVacancy/{Id}")
+    public ResponseEntity<String> DeleteMyPostedVacancy(HttpServletRequest request, @PathVariable Long Id) {
         String token = request.getHeader("Authorization").substring(7);
         String username = jwtUtil.extractUsername(token);
         com.example.demo.Models.User user = userRepository.findByUsername(username)

@@ -34,7 +34,7 @@ public class VacancyService {
 
     public VacancyDto mapToDTO(Vacancy job) {
         VacancyDto dto = new VacancyDto();
-
+        dto.setId(job.getId());
         dto.setJobTitle(job.getJobTitle());
         dto.setJobDescription(job.getJobDescription());
         dto.setDatePosted(job.getDatePosted());
@@ -130,17 +130,30 @@ public class VacancyService {
 
         vacancyRepository.delete(vacancy);
     }
-    public List<Vacancy> searchVacancies(VacancySearchCriteriaDto criteria) {
-        Specification<Vacancy> spec = Specification.where(null);
+    public List<VacancyDto> searchVacancies(VacancySearchCriteriaDto criteria) {
+        Specification<Vacancy> spec = null;
 
-        if (criteria.getKeyword() != null) spec = spec.and(VacancySpecifications.hasKeyword(criteria.getKeyword()));
-        if (criteria.getLocation() != null) spec = spec.and(VacancySpecifications.hasLocation(criteria.getLocation()));
-        if (criteria.getCategory() != null) spec = spec.and(VacancySpecifications.hasCategory(criteria.getCategory()));
-        if (criteria.getSalaryMin() != null && criteria.getSalaryMax() != null)
-            spec = spec.and(VacancySpecifications.hasSalaryBetween(criteria.getSalaryMin(), criteria.getSalaryMax()));
-        if (criteria.getPostedAfter() != null) spec = spec.and(VacancySpecifications.postedAfter(criteria.getPostedAfter()));
+        boolean hasKeyword = criteria.getKeyword() != null && !criteria.getKeyword().trim().isEmpty();
+        boolean hasLocation = criteria.getLocation() != null && !criteria.getLocation().trim().isEmpty();
 
-        return vacancyRepository.findAll(spec);
+        if (hasKeyword) {
+            spec = Specification.where(VacancySpecifications.hasKeyword(criteria.getKeyword().trim()));
+        }
+
+        if (hasLocation) {
+            spec = (spec == null)
+                    ? Specification.where(VacancySpecifications.hasLocation(criteria.getLocation().trim()))
+                    : spec.and(VacancySpecifications.hasLocation(criteria.getLocation().trim()));
+        }
+
+        List<Vacancy> results = (spec == null)
+                ? vacancyRepository.findAll()
+                : vacancyRepository.findAll(spec);
+
+        return results.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+
     }
 
 }

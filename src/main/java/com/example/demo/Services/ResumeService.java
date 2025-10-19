@@ -23,6 +23,7 @@ public class ResumeService {
     public ResumeService(ResumeRepository resumeRepository, UserRepository userRepository) {
         this.resumeRepository = resumeRepository;
         this.userRepository = userRepository;
+
     }
     @Transactional
 
@@ -32,12 +33,12 @@ public class ResumeService {
         Optional<Resume> existingResume = resumeRepository.findByOwnerId(userId);
 
         Resume resume = existingResume.orElse(new Resume());
-
         resume.setOwner(owner);
         resume.setFileName(file.getOriginalFilename());
         resume.setFileType(file.getContentType());
         resume.setData(file.getBytes());
         resume.setDateUploaded(LocalDate.now());
+        System.out.println("Resume data type: " + resume.getData().getClass().getName());
 
         Resume saved = resumeRepository.save(resume);
         return mapToDto(saved);
@@ -48,6 +49,7 @@ public class ResumeService {
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         return resume.getData();
     }
+
 @Transactional
     public ResumeDto getResumeByUser(Long userId) {
         return resumeRepository.findByOwnerId(userId)
@@ -63,7 +65,12 @@ public class ResumeService {
         return "Success";
     }
 
-    public ResumeDto getResumeById(Long id) {
+    public Resume getResumeById(Long id) {
+        Resume resume = resumeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+        return resume;
+    }
+    public ResumeDto getResumeDataById(Long id) {
         Resume resume = resumeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         return mapToDto(resume);
