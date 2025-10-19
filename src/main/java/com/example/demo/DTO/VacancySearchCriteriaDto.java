@@ -11,8 +11,6 @@ import java.time.LocalDate;
 public class VacancySearchCriteriaDto {
     private String keyword;
     private String location;
-    private String category;
-    private Double salaryMin;
-    private Double salaryMax;
-    private LocalDate postedAfter;
-}
+
+
+ }

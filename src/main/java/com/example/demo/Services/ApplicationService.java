@@ -61,6 +61,7 @@ public class ApplicationService {
 
         return mapToDto(saved);
     }
+    @Transactional
 
     public List<ApplicationDto> getApplicationsByUser(Long userId) {
         return applicationRepository.findByApplicantId(userId).stream()
@@ -72,6 +73,8 @@ public class ApplicationService {
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
+    @Transactional
+
     public List<ApplicationDto> getApplicantsForJob(Long vacancyId, Long posterId) throws RuntimeException {
         Vacancy vacancy = vacancyRepository.findById(vacancyId)
                 .orElseThrow(() -> new RuntimeException("Vacancy not found"));
@@ -88,14 +91,22 @@ public class ApplicationService {
 
 
     private ApplicationDto mapToDto(Application application) {
-        ApplicationDto dto = new ApplicationDto();
+        User applicant = application.getApplicant();
+        Vacancy job = application.getJob();
+        Resume resume = application.getResume();
 
+        ApplicationDto dto = new ApplicationDto();
         dto.setAppliedDate(application.getAppliedDate());
-        dto.setApplicantId(application.getApplicant().getId());
-        dto.setApplicantName(application.getApplicant().getName());
-        dto.setVacancyId(application.getJob().getId());
-        dto.setJobTitle(application.getJob().getJobTitle());
-        dto.setResumeId(application.getResume().getId());
+        dto.setApplicantId(applicant.getId());
+        dto.setApplicantName(applicant.getName());
+        dto.setApplicantSurname(applicant.getSurname());
+        dto.setApplicantEmail(applicant.getEmail());
+        dto.setApplicantPhone(applicant.getPhoneNumber());
+        dto.setVacancyId(job.getId());
+        dto.setJobTitle(job.getJobTitle());
+        dto.setResumeId(resume != null ? resume.getId() : null);
+        dto.setCoverletter(application.getCoverletter());
+
         return dto;
     }
 }

@@ -14,4 +14,10 @@ public class ApplicationDto {
     private String jobTitle;
     private Long resumeId;
     private String coverletter;
+    // Applicant info
+
+    private String applicantSurname;
+    private String applicantEmail;
+    private String applicantPhone;
+
 }

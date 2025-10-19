@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/applications")
+@RequestMapping("api/application")
 public class ApplicationController {
 
     private final ApplicationService applicationService;
@@ -26,8 +26,8 @@ private final UserRepository userRepository;
     }
 
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
-    @PostMapping("/applytoJob")
-    public ApplicationDto applyToJob(@RequestParam Long vacancyId,@RequestBody ApplicationDto applicationDto, HttpServletRequest request) {
+    @PostMapping("/applytoJob/{vacancyId}")
+    public ApplicationDto applyToJob(@PathVariable Long vacancyId,@RequestBody ApplicationDto applicationDto, HttpServletRequest request) {
 
 
         String token = request.getHeader("Authorization").substring(7);
