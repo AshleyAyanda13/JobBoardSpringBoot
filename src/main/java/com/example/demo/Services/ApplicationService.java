@@ -9,6 +9,8 @@ import com.example.demo.Repository.ApplicationRepository;
 import com.example.demo.Repository.ResumeRepository;
 import com.example.demo.Repository.UserRepository;
 import com.example.demo.Repository.VacancyRepository;
+import com.example.demo.Services.EmailService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,8 @@ public class ApplicationService {
     private final UserRepository userRepository;
     private final VacancyRepository vacancyRepository;
     private final ResumeRepository resumeRepository;
+    @Autowired
+    private EmailService emailService;
 
     public ApplicationService(ApplicationRepository applicationRepository,
                               UserRepository userRepository,
@@ -58,6 +62,11 @@ public class ApplicationService {
         application.setAppliedDate(LocalDate.now());
         application.setCoverletter(applicationDto.getCoverletter());
         Application saved = applicationRepository.save(application);
+//    emailService.sendSimpleEmail(
+//            applicant.getEmail(),
+//            "Application",
+//            "Hi " + applicant.getName() + ", You have sucessfully applied for this a job"
+   // );
 
         return mapToDto(saved);
     }
