@@ -8,6 +8,7 @@ import com.example.demo.DTO.UserDto;
 import com.example.demo.Models.Role;
 import com.example.demo.Models.User;
 import com.example.demo.Repository.UserRepository;
+import com.example.demo.Services.EmailService;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -32,7 +33,8 @@ public class AuthController {
 
         @Autowired
         private AuthenticationManager authenticationManager;
-
+@Autowired
+private EmailService emailService;
         @Autowired
        private JwtUtil jwtUtil;
 
@@ -95,6 +97,12 @@ private UserRepository userRepository;
 
 
         userRepository.save(userr);
+//        emailService.sendSimpleEmail(
+//                user.getEmail(),
+//                "Welcome to JobBoard",
+//                "Hi " + user.getName() + ", thanks for registering!"
+//        );
+
         ResponseMessage responseMessage=new ResponseMessage();
         responseMessage.Message="Registration Successful";
         return ResponseEntity.ok(responseMessage);
