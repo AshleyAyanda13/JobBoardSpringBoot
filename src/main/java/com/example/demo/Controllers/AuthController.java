@@ -12,7 +12,12 @@ import com.example.demo.Services.EmailService;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,10 +25,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -42,29 +47,43 @@ private EmailService emailService;
         private UserDetailsService userDetailsService;
 @Autowired
 private UserRepository userRepository;
-        @PostMapping("/authenticate")
-        public ResponseEntity<?> createAuthToken(@RequestBody UserDto authRequest) throws Exception {
-
-            try {
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-                );
-            } catch (Exception e) {
-                System.out.println("Authentication failed: " + e.getMessage());
-                return ResponseEntity.status(403).body("Invalid credentials");
-            }
-
-            final UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getUsername());
-            User user = userRepository.findByUsername(userDetails.getUsername())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-            User existingUser = userRepository.findByUsername("wow").get();
-
-            final String jwt = jwtUtil.generateToken(userDetails, user.getId(),user.getRole().name());
-
-
-            return ResponseEntity.ok(new JwtResponse(jwt));
+    @PostMapping("/authenticate")
+    public ResponseEntity<?> createAuthToken(@RequestBody UserDto authRequest, HttpServletResponse response) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            );
+        } catch (Exception e) {
+            System.out.println("Authentication failed: " + e.getMessage());
+            return ResponseEntity.status(403).body("Invalid credentials");
         }
+
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getUsername());
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        final String jwt = jwtUtil.generateToken(userDetails, user.getId(), user.getRole().name());
+
+
+        ResponseCookie cookie = ResponseCookie.from("authToken", jwt)
+                .httpOnly(true)
+                .secure(false) // ❗ Use false for localhost (true only for HTTPS)
+                .path("/")
+                .maxAge(3600)
+                .sameSite("Lax") // ❗ Use "Lax" for localhost; "Strict" blocks cross-origin cookies
+                .build();
+
+
+
+        response.setHeader("Set-Cookie", cookie.toString());
+
+        Map<String, Object> userInfo = Map.of(
+                "username", user.getUsername(),
+                "role", user.getRole().name()
+        );
+
+        return ResponseEntity.ok(userInfo);
+    }
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegistrationDto user) {
 
@@ -143,6 +162,34 @@ private UserRepository userRepository;
         responseMessage.Message="Registration Successful";
         return ResponseEntity.ok(responseMessage);
 
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
+        String jwt = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("authToken".equals(cookie.getName())) {
+                    jwt = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (jwt == null || !jwt.contains(".")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No valid token");
+        }
+
+        String username = jwtUtil.extractUsername(jwt);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return ResponseEntity.ok(Map.of(
+                "userId", user.getId(),
+                "username", user.getUsername(),
+                "role", user.getRole().name()
+        ));
     }
 
 }

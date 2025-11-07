@@ -1,47 +1,52 @@
 package com.example.demo.Controllers;
 
 import com.example.demo.DTO.ResumeDto;
+import com.example.demo.DTO.ResponseMessage;
 import com.example.demo.Models.Resume;
+import com.example.demo.Models.User;
+import com.example.demo.Repository.UserRepository;
 import com.example.demo.Services.ResumeService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/resumes")
 public class ResumeController {
 
     private final ResumeService resumeService;
+    private final UserRepository userRepository;
+
     @Autowired
-    private final com.example.demo.Config.JwtUtil jwtUtil;
-private final com.example.demo.Repository.UserRepository userRepository;
-    public ResumeController(ResumeService resumeService, com.example.demo.Config.JwtUtil jwtUtil, com.example.demo.Repository.UserRepository userRepository) {
+    public ResumeController(ResumeService resumeService, UserRepository userRepository) {
         this.resumeService = resumeService;
-        this.jwtUtil=jwtUtil;
-        this.userRepository=userRepository;
+        this.userRepository = userRepository;
+    }
+
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UsernameNotFoundException("User not authenticated");
+        }
+
+        String username = authentication.getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
     @PostMapping("/upload")
-    public ResumeDto uploadResume(HttpServletRequest request,
-                                  @RequestParam("file") MultipartFile file) throws IOException {
-
-
-        String token = request.getHeader("Authorization").substring(7);
-        String username = jwtUtil.extractUsername(token);
-        com.example.demo.Models.User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-
+    public ResumeDto uploadResume(@RequestParam("file") MultipartFile file) throws IOException {
+        User user = getAuthenticatedUser();
         return resumeService.uploadResume(user.getId(), file);
     }
 
@@ -53,62 +58,41 @@ private final com.example.demo.Repository.UserRepository userRepository;
 
     @PreAuthorize("hasAnyRole('RECRUITER', 'ADMIN')")
     @GetMapping("/resume/{Id}")
-    public ResponseEntity<byte[]>  getResumesById(@PathVariable Long Id) {
+    public ResponseEntity<byte[]> getResumesById(@PathVariable Long Id) {
         Resume resume = resumeService.getResumeById(Id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resume.getFileName() + "\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resume.getData());
-
-
     }
 
     @PreAuthorize("hasAnyRole('RECRUITER', 'ADMIN')")
     @GetMapping("/resumedata/{Id}")
-    public ResponseEntity<ResumeDto>  getResumeDataById(@PathVariable Long Id) {
-
-
-         return ResponseEntity.ok( resumeService.getResumeDataById(Id));
-
-
+    public ResponseEntity<ResumeDto> getResumeDataById(@PathVariable Long Id) {
+        return ResponseEntity.ok(resumeService.getResumeDataById(Id));
     }
 
-
+    @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
     @GetMapping("/download")
-    public ResponseEntity<byte[]> downloadOwnResume(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
-        String username = jwtUtil.extractUsername(token);
-        com.example.demo.Models.User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
+    public ResponseEntity<byte[]> downloadOwnResume() {
+        User user = getAuthenticatedUser();
         ResumeDto dto = resumeService.getResumeByUser(user.getId());
-
-
         byte[] data = resumeService.getResumeFileData(user.getId());
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(dto.getFileType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + dto.getFileName() + "\"")
                 .body(data);
-
     }
+
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
     @DeleteMapping("/delete")
-    public ResponseEntity<String> DeleteCV(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
-        String username = jwtUtil.extractUsername(token);
-        com.example.demo.Models.User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public ResponseEntity<String> deleteCV() {
+        User user = getAuthenticatedUser();
+        resumeService.deleteResume(user.getId());
 
-
-
-
-       resumeService.deleteResume(user.getId());
-        com.example.demo.DTO.ResponseMessage responseMessage=new com.example.demo.DTO.ResponseMessage();
-        responseMessage.Message="Deletion Successful";
+        ResponseMessage responseMessage = new ResponseMessage();
+        responseMessage.Message = "Deletion Successful";
         return ResponseEntity.ok(responseMessage.toString());
-
-
     }
 }
-
