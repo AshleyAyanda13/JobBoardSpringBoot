@@ -39,7 +39,7 @@ public class ResumeController {
         }
 
         String username = authentication.getName();
-        return userRepository.findByUsername(username)
+        return userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 

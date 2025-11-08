@@ -19,6 +19,7 @@ public class User {
     private Long id;
     @Column(unique = true, nullable = false)
     private String username;
+    private String title;
     private String surname;
     private String name;
     private  String email;
@@ -26,6 +27,7 @@ public class User {
     private String phoneNumber;
     private String idNumber;
     private String jobtitle;
+    private String company;
     @Enumerated(EnumType.STRING)
     private Role role;
 }

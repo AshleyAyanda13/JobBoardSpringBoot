@@ -101,7 +101,7 @@ public class JobSeekerBackgroundController {
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
     @GetMapping("/myEducation/{Id}")
     public ResponseEntity<EducationDto> GetSingleEducation(@PathVariable Long Id) {
-        getAuthenticatedUser(); // Just to validate access
+        getAuthenticatedUser();
         return ResponseEntity.ok(educationService.GetSingleEducation(Id));
     }
 

@@ -4,7 +4,9 @@ import com.example.demo.Models.Application;
 import com.example.demo.Models.Role;
 import com.example.demo.Models.User;
 import com.example.demo.Repository.ApplicationRepository;
+import com.example.demo.Repository.EducationRepository;
 import com.example.demo.Repository.UserRepository;
+import com.example.demo.Repository.VacancyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +21,7 @@ public class SeederConfig {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ApplicationRepository application;
+
 
     @Bean
     public CommandLineRunner seedSupervisorUser() {
@@ -28,9 +30,13 @@ public class SeederConfig {
         return new CommandLineRunner() {
             @Override
             public void run(String... args) {
-                if (!userRepository.findByUsername("administrator12").isPresent()) {
+
+
+
+                if (!userRepository.findByEmail("Admin12@JobBoard.com").isPresent()) {
                     User newUser = new User();
-                    newUser.setUsername("administrator12");
+                    newUser.setUsername("Administrator12");
+                    newUser.setEmail("Admin12@JobBoard.com");
                     newUser.setPassword(passwordEncoder.encode("secure@123"));
                     newUser.setRole(Role.ADMIN);
 

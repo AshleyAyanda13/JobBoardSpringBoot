@@ -33,7 +33,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String jwt = null;
         String username = null;
 
-        // ✅ Extract JWT from HttpOnly cookie
+
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -44,7 +44,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
-        // ✅ Validate format before parsing
+
         if (jwt != null && jwt.contains(".")) {
             try {
                 username = jwtUtil.extractUsername(jwt);
@@ -53,7 +53,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
-        // ✅ Authenticate user if token is valid
+
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
@@ -67,5 +67,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+
+
+
+
     }
 }

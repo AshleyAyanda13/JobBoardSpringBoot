@@ -1,8 +1,7 @@
 package com.example.demo.Controllers;
 
 import com.example.demo.Config.JwtUtil;
-import com.example.demo.DTO.JwtResponse;
-import com.example.demo.DTO.RegistrationDto;
+ import com.example.demo.DTO.RegistrationDto;
 import com.example.demo.DTO.ResponseMessage;
 import com.example.demo.DTO.UserDto;
 import com.example.demo.Models.Role;
@@ -33,33 +32,36 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-@Autowired
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
-        @Autowired
-        private AuthenticationManager authenticationManager;
-@Autowired
-private EmailService emailService;
-        @Autowired
-       private JwtUtil jwtUtil;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private EmailService emailService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
-        @Autowired
-        private UserDetailsService userDetailsService;
-@Autowired
-private UserRepository userRepository;
+    @Autowired
+    private UserDetailsService userDetailsService;
+    @Autowired
+    private UserRepository userRepository;
+
     @PostMapping("/authenticate")
     public ResponseEntity<?> createAuthToken(@RequestBody UserDto authRequest, HttpServletResponse response) {
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+                    new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
             );
         } catch (Exception e) {
             System.out.println("Authentication failed: " + e.getMessage());
             return ResponseEntity.status(403).body("Invalid credentials");
         }
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getUsername());
-        User user = userRepository.findByUsername(userDetails.getUsername())
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getEmail());
+
+        System.out.println(authRequest.getEmail() + authRequest.getPassword());
+        User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         final String jwt = jwtUtil.generateToken(userDetails, user.getId(), user.getRole().name());
@@ -67,12 +69,11 @@ private UserRepository userRepository;
 
         ResponseCookie cookie = ResponseCookie.from("authToken", jwt)
                 .httpOnly(true)
-                .secure(false) // ❗ Use false for localhost (true only for HTTPS)
+                .secure(false)
                 .path("/")
                 .maxAge(3600)
-                .sameSite("Lax") // ❗ Use "Lax" for localhost; "Strict" blocks cross-origin cookies
+                .sameSite("Lax")
                 .build();
-
 
 
         response.setHeader("Set-Cookie", cookie.toString());
@@ -84,14 +85,15 @@ private UserRepository userRepository;
 
         return ResponseEntity.ok(userInfo);
     }
+
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegistrationDto user) {
 
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             return ResponseEntity.badRequest().body("Email is required.");
         }
-       if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-          return ResponseEntity.badRequest().body("User already exists.");
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body("User already exists.");
         }
 
 
@@ -102,7 +104,7 @@ private UserRepository userRepository;
         }
 
 
-        User userr=new User();
+        User userr = new User();
         userr.setEmail(user.getEmail());
         userr.setPassword(passwordEncoder.encode(user.getPassword()));
         userr.setRole(Role.JOBSEEKER);
@@ -113,8 +115,6 @@ private UserRepository userRepository;
         userr.setIdNumber(user.getIdNumber());
 
 
-
-
         userRepository.save(userr);
 //        emailService.sendSimpleEmail(
 //                user.getEmail(),
@@ -122,14 +122,11 @@ private UserRepository userRepository;
 //                "Hi " + user.getName() + ", thanks for registering!"
 //        );
 
-        ResponseMessage responseMessage=new ResponseMessage();
-        responseMessage.Message="Registration Successful";
+        ResponseMessage responseMessage = new ResponseMessage();
+        responseMessage.Message = "Registration Successful";
         return ResponseEntity.ok(responseMessage);
 
     }
-
-
-
 
 
     @PostMapping("/registerrecruiter")
@@ -142,7 +139,7 @@ private UserRepository userRepository;
         }
 
 
-
+        System.out.println(user.getPassword() + user.getRepeatPassword());
 
         if (!user.getPassword().equals(user.getRepeatPassword())) {
 
@@ -151,15 +148,19 @@ private UserRepository userRepository;
         }
 
 
-        User userr=new User();
+        User userr = new User();
         userr.setEmail(user.getEmail());
         userr.setPassword(passwordEncoder.encode(user.getPassword()));
         userr.setRole(Role.RECRUITER);
         userr.setUsername(user.getUsername());
+        userr.setCompany(user.getCompany());
+        userr.setName(user.getName());
+        userr.setSurname(user.getSurname());
+        userr.setTitle(user.getTitle());
 
         userRepository.save(userr);
-        ResponseMessage responseMessage=new ResponseMessage();
-        responseMessage.Message="Registration Successful";
+        ResponseMessage responseMessage = new ResponseMessage();
+        responseMessage.Message = "Registration Successful";
         return ResponseEntity.ok(responseMessage);
 
     }
@@ -182,9 +183,10 @@ private UserRepository userRepository;
         }
 
         String username = jwtUtil.extractUsername(jwt);
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        System.out.println("JWT from cookie: " + jwt);
         return ResponseEntity.ok(Map.of(
                 "userId", user.getId(),
                 "username", user.getUsername(),
@@ -192,9 +194,21 @@ private UserRepository userRepository;
         ));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("authToken", "");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+
+        ResponseMessage message = new ResponseMessage();
+        message.Message = "Successfully Logged Out";
+        return ResponseEntity.ok(message);
+    }
+
 }
-
-
 
 
 

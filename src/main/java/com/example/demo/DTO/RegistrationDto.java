@@ -13,6 +13,7 @@ import java.util.Date;
 public class RegistrationDto {
 
     private String username;
+    private String title;
     private String name;
     private String surname;
 
@@ -26,6 +27,7 @@ public class RegistrationDto {
     private String idNumber;
     private String Gender;
 
+    private String company;
 
     private String phoneNumber;
 }
