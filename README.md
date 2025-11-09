@@ -1,3 +1,5 @@
+Web service URL: https://jobboard-springboot.onrender.com/
+
 This Job Board System is a full-stack platform designed to streamline recruitment and job applications through a secure, scalable architecture. 
 The backend is developed using Spring Boot (Java 21) and PostgreSQL, featuring JWT-based authentication and role-based access control (RBAC) for job seekers, recruiters, and administrators. 
 
