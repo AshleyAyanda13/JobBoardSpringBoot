@@ -42,7 +42,7 @@ public class VacancyController {
         return ResponseEntity.ok(vacancyService.getAllVacancies());
     }
 
-    @PreAuthorize("hasAnyRole('RECRUITER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('JOBSEEKER','RECRUITER', 'ADMIN')")
     @GetMapping("/VacancyDetails/{Id}")
     public ResponseEntity<VacancyDto> GetVacancyById(HttpServletRequest request, @PathVariable Long Id) {
         User user = getAuthenticatedUser(request);

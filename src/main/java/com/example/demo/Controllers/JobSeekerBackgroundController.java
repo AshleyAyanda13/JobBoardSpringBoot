@@ -49,7 +49,7 @@ public class JobSeekerBackgroundController {
         }
 
         String username = authentication.getName();
-        return userRepository.findByUsername(username)
+        return userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
@@ -63,7 +63,7 @@ public class JobSeekerBackgroundController {
     @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN')")
     @GetMapping("/myworkExperience/{Id}")
     public ResponseEntity<WorkExperienceDto> GetSingleWorkExperience(@PathVariable Long Id) {
-        getAuthenticatedUser(); // Just to validate access
+        getAuthenticatedUser();
         return ResponseEntity.ok(workExperienceService.getWorkExperience(Id));
     }
 

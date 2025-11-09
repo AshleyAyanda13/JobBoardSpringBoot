@@ -25,7 +25,7 @@ public interface VacancyRepository extends JpaRepository<Vacancy, Long>, JpaSpec
     void deleteByEmployer_Id(Long userId);
     List<Vacancy> findByCategory(String category);
 
-    // Find vacancies by location
+
     List<Vacancy> findByLocation(String location);
 
 

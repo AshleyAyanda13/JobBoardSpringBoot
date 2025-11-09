@@ -54,7 +54,7 @@ public class ResumeService {
     public ResumeDto getResumeByUser(Long userId) {
         return resumeRepository.findByOwnerId(userId)
                 .map(this::mapToDto)
-                .orElse(null); // or throw a custom exception if preferred
+                .orElse(null);
     }
 @Transactional
     public String deleteResume(Long userId) {

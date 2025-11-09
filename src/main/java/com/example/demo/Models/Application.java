@@ -28,10 +28,11 @@ public class Application {
     @JoinColumn(name = "vacancy_id")
     private Vacancy job;
 
-    @OneToOne
+    @ManyToOne
+
     @JoinColumn(name = "resume_id")
     private Resume resume;
-    @Column(length = 2000)
+    @Column(length = 10000)
     private String coverletter;
 
 

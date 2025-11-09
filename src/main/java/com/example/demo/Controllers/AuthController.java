@@ -18,6 +18,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -69,11 +71,12 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("authToken", jwt)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(3600)
-                .sameSite("Lax")
                 .build();
+
 
 
         response.setHeader("Set-Cookie", cookie.toString());
@@ -164,7 +167,7 @@ public class AuthController {
         return ResponseEntity.ok(responseMessage);
 
     }
-
+    @PreAuthorize("hasAnyRole('JOBSEEKER', 'ADMIN','RECRUITER')")
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
         String jwt = null;
@@ -186,22 +189,34 @@ public class AuthController {
 
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        System.out.println("JWT from cookie: " + jwt);
-        return ResponseEntity.ok(Map.of(
-                "userId", user.getId(),
-                "username", user.getUsername(),
-                "role", user.getRole().name()
-        ));
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("username", user.getUsername());
+        userDetails.put("role", user.getRole().name());
+        if (user.getTitle() != null) userDetails.put("title", user.getTitle());
+        if (user.getId() != null) userDetails.put("userId", user.getId());
+        if (user.getName() != null) userDetails.put("name", user.getName());
+        if (user.getSurname() != null) userDetails.put("surname", user.getSurname());
+        if (user.getEmail() != null) userDetails.put("email", user.getEmail());
+        if (user.getPhoneNumber() != null) userDetails.put("phoneNumber", user.getPhoneNumber());
+        if (user.getJobtitle() != null) userDetails.put("jobtitle", user.getJobtitle());
+        if (user.getCompany() != null) userDetails.put("company", user.getCompany());
+
+        return ResponseEntity.ok(userDetails);
+
+
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
-        Cookie cookie = new Cookie("authToken", "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+        ResponseCookie deleteCookie = ResponseCookie.from("authToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+
+        response.setHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
 
         ResponseMessage message = new ResponseMessage();
         message.Message = "Successfully Logged Out";
