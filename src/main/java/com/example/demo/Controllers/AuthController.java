@@ -74,7 +74,7 @@ public class AuthController {
                 .secure(true)
                 .sameSite("None")
                 .path("/")
-                .maxAge(3600)
+                .maxAge(3800)
                 .build();
 
 
